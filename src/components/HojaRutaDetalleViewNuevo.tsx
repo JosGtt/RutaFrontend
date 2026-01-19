@@ -232,12 +232,15 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
 
     try {
       setActualizandoEstado(true);
+      // El validador espera 'estado' con valores: pendiente, en_proceso, completado, vencido
       await axiosAuth.patch(`${API_ENDPOINTS.HOJAS_RUTA}/${hojaCompleta.id}/estado`, {
-        estado: destino,
+        estado: estadoBackend,
         estado_cumplimiento: estadoBackend
       });
 
-      setHojaCompleta({ ...hojaCompleta, estado: destino, estado_cumplimiento: estadoBackend });
+      // Guardar estado visual como 'finalizada' o 'en_proceso' para la UI
+      const estadoVisual = destino === 'finalizada' ? 'finalizada' : 'en_proceso';
+      setHojaCompleta({ ...hojaCompleta, estado: estadoVisual, estado_cumplimiento: estadoBackend });
       toast.success(`Estado actualizado a ${destino === 'finalizada' ? 'Finalizada' : 'En Proceso'}`);
     } catch (err: any) {
       const mensaje = err?.response?.data?.message || 'No se pudo actualizar el estado';
@@ -315,8 +318,9 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
     const estadoBackend = 'en_proceso';
     try {
       setActualizandoEstado(true);
+      // El validador espera 'estado' con valores: pendiente, en_proceso, completado, vencido
       await axiosAuth.patch(`${API_ENDPOINTS.HOJAS_RUTA}/${hojaCompleta.id}/estado`, {
-        estado: 'en_proceso',
+        estado: estadoBackend,
         estado_cumplimiento: estadoBackend
       });
       setHojaCompleta({ ...hojaCompleta, estado: 'en_proceso', estado_cumplimiento: estadoBackend });

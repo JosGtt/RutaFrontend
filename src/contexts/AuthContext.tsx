@@ -110,11 +110,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Funciones de autorización
   const canEdit = (): boolean => {
-    return user?.rol === 'desarrollador' || user?.rol === 'admin';
+    const rol = user?.rol?.toLowerCase();
+    return rol === 'desarrollador' || rol === 'admin' || rol === 'administrador';
   };
 
   const canCreate = (): boolean => {
-    return user?.rol === 'desarrollador' || user?.rol === 'admin' || user?.rol === 'usuario';
+    return !!user; // Cualquier usuario autenticado puede crear
   };
 
   const canRead = (): boolean => {
@@ -122,24 +123,28 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const canDelete = (): boolean => {
-    return user?.rol === 'desarrollador' || user?.rol === 'admin';
+    const rol = user?.rol?.toLowerCase();
+    return rol === 'desarrollador' || rol === 'admin' || rol === 'administrador';
   };
 
   const canDeleteProgreso = (): boolean => {
-    return user?.rol === 'desarrollador' || user?.rol === 'admin';
+    const rol = user?.rol?.toLowerCase();
+    return rol === 'desarrollador' || rol === 'admin' || rol === 'administrador';
   };
 
   const canUnfinalize = (): boolean => {
     // Solo admin y desarrollador pueden cambiar de finalizada a en_proceso
-    return user?.rol === 'desarrollador' || user?.rol === 'admin';
+    const rol = user?.rol?.toLowerCase();
+    return rol === 'desarrollador' || rol === 'admin' || rol === 'administrador';
   };
 
   const isAdmin = (): boolean => {
-    return user?.rol === 'admin' || user?.rol === 'desarrollador';
+    const rol = user?.rol?.toLowerCase();
+    return rol === 'admin' || rol === 'administrador' || rol === 'desarrollador';
   };
 
   const isDeveloper = (): boolean => {
-    return user?.rol === 'desarrollador';
+    return user?.rol?.toLowerCase() === 'desarrollador';
   };
 
   const value = {

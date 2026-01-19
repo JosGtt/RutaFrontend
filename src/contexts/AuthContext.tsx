@@ -19,6 +19,9 @@ interface AuthContextType {
   canEdit: () => boolean;
   canCreate: () => boolean;
   canRead: () => boolean;
+  canDelete: () => boolean;
+  canDeleteProgreso: () => boolean;
+  canUnfinalize: () => boolean;
   isAdmin: () => boolean;
   isDeveloper: () => boolean;
 }
@@ -118,6 +121,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     return !!user; // Cualquier usuario autenticado puede leer
   };
 
+  const canDelete = (): boolean => {
+    return user?.rol === 'desarrollador' || user?.rol === 'admin';
+  };
+
+  const canDeleteProgreso = (): boolean => {
+    return user?.rol === 'desarrollador' || user?.rol === 'admin';
+  };
+
+  const canUnfinalize = (): boolean => {
+    // Solo admin y desarrollador pueden cambiar de finalizada a en_proceso
+    return user?.rol === 'desarrollador' || user?.rol === 'admin';
+  };
+
   const isAdmin = (): boolean => {
     return user?.rol === 'admin' || user?.rol === 'desarrollador';
   };
@@ -135,6 +151,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     canEdit,
     canCreate,
     canRead,
+    canDelete,
+    canDeleteProgreso,
+    canUnfinalize,
     isAdmin,
     isDeveloper
   };

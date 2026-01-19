@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axiosAuth from '../config/axiosAuth';
 import jsPDF from 'jspdf';
 import domtoimage from 'dom-to-image';
 import { toast } from 'react-toastify';
@@ -41,7 +41,7 @@ interface HistorialItem {
 
 const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, onBack }) => {
   const navigate = useNavigate();
-  const { token, canEdit, user } = useAuth();
+  const { token, canEdit, canDelete, canDeleteProgreso, canUnfinalize, user } = useAuth();
 
   const [hojaCompleta, setHojaCompleta] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -115,9 +115,7 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
     try {
       setLoading(true);
       setError('');
-      const res = await axios.get(API_ENDPOINTS.HOJAS_RUTA_DETALLE(Number(hoja.id)), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axiosAuth.get(API_ENDPOINTS.HOJAS_RUTA_DETALLE(Number(hoja.id)));
       const payload = res.data?.hoja || res.data?.data || res.data;
       setHojaCompleta(payload);
       setDestinosEditables(Array.isArray(payload?.destinos) ? payload.destinos : []);
@@ -147,9 +145,7 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
     try {
       setCargandoHistorial(true);
       setHistorialError('');
-      const res = await axios.get(API_ENDPOINTS.PROGRESO_HISTORIAL(hojaCompleta.id), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await axiosAuth.get(API_ENDPOINTS.PROGRESO_HISTORIAL(hojaCompleta.id));
       const payload = res.data?.historial || res.data?.data || [];
       setHistorialProgreso(Array.isArray(payload) ? payload : []);
     } catch (err: any) {
@@ -171,7 +167,7 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
     }
     try {
       setVerificandoPassword(true);
-      await axios.post(API_ENDPOINTS.AUTH_LOGIN, {
+      await axiosAuth.post(API_ENDPOINTS.AUTH_LOGIN, {
         username: user.username,
         password
       });
@@ -236,11 +232,9 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
 
     try {
       setActualizandoEstado(true);
-      await axios.patch(`${API_ENDPOINTS.HOJAS_RUTA}/${hojaCompleta.id}/estado`, {
+      await axiosAuth.patch(`${API_ENDPOINTS.HOJAS_RUTA}/${hojaCompleta.id}/estado`, {
         estado: destino,
         estado_cumplimiento: estadoBackend
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
 
       setHojaCompleta({ ...hojaCompleta, estado: destino, estado_cumplimiento: estadoBackend });
@@ -260,11 +254,9 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
     }
     try {
       setActualizandoEstado(true);
-      await axios.patch(`${API_ENDPOINTS.HOJAS_RUTA}/${hojaCompleta.id}/ubicacion`, {
+      await axiosAuth.patch(`${API_ENDPOINTS.HOJAS_RUTA}/${hojaCompleta.id}/ubicacion`, {
         ubicacion_actual: ubicacion,
         responsable_actual: responsable
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setHojaCompleta({ ...hojaCompleta, ubicacion_actual: ubicacion, responsable_actual: responsable });
       toast.success('Ubicación actualizada');
@@ -287,9 +279,7 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
     if (!progresoAEliminar) return;
     try {
       const baseProgreso = API_ENDPOINTS.PROGRESO_ADD.replace('/agregar', '');
-      await axios.delete(`${baseProgreso}/${progresoAEliminar}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axiosAuth.delete(`${baseProgreso}/${progresoAEliminar}`);
       toast.success('Progreso eliminado');
       fetchHistorialProgreso();
     } catch (err: any) {
@@ -304,12 +294,10 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
   const guardarEdicion = async () => {
     if (!hojaCompleta) return;
     try {
-      await axios.put(`${API_ENDPOINTS.HOJAS_RUTA}/${hojaCompleta.id}`, {
+      await axiosAuth.put(`${API_ENDPOINTS.HOJAS_RUTA}/${hojaCompleta.id}`, {
         ...formEdicion,
         numero_fojas: formEdicion.numero_fojas ? Number(formEdicion.numero_fojas) : null,
         destinos: destinosEditables
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       toast.success('Hoja de ruta actualizada');
       setShowEditModal(false);
@@ -327,11 +315,9 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
     const estadoBackend = 'en_proceso';
     try {
       setActualizandoEstado(true);
-      await axios.patch(`${API_ENDPOINTS.HOJAS_RUTA}/${hojaCompleta.id}/estado`, {
+      await axiosAuth.patch(`${API_ENDPOINTS.HOJAS_RUTA}/${hojaCompleta.id}/estado`, {
         estado: 'en_proceso',
         estado_cumplimiento: estadoBackend
-      }, {
-        headers: { Authorization: `Bearer ${token}` }
       });
       setHojaCompleta({ ...hojaCompleta, estado: 'en_proceso', estado_cumplimiento: estadoBackend });
       toast.success('Estado cambiado a En Proceso');
@@ -356,9 +342,7 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
     if (!ok) return;
     try {
       setEliminandoHR(true);
-      await axios.delete(API_ENDPOINTS.HOJAS_RUTA_DETALLE(Number(hojaCompleta.id)), {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await axiosAuth.delete(API_ENDPOINTS.HOJAS_RUTA_DETALLE(Number(hojaCompleta.id)));
       toast.success('Hoja de ruta eliminada');
       setShowEliminarModal(false);
       onBack();
@@ -459,16 +443,32 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                setEstadoObjetivo(estadoEsFinalizada ? 'reabrir' : 'finalizar');
-                setShowFinalizarModal(true);
-              }}
-              disabled={actualizandoEstado}
-              className="px-4 py-2 rounded-lg bg-amber-500 text-slate-900 font-semibold hover:bg-amber-400 transition disabled:opacity-60"
-            >
-              {actualizandoEstado ? 'Guardando...' : estadoEsFinalizada ? 'Marcar En Proceso' : 'Marcar Finalizada'}
-            </button>
+            {/* Solo mostrar botón reabrir si el usuario puede desmarcar finalizado */}
+            {estadoEsFinalizada ? (
+              canUnfinalize() && (
+                <button
+                  onClick={() => {
+                    setEstadoObjetivo('reabrir');
+                    setShowFinalizarModal(true);
+                  }}
+                  disabled={actualizandoEstado}
+                  className="px-4 py-2 rounded-lg bg-blue-500 text-white font-semibold hover:bg-blue-400 transition disabled:opacity-60"
+                >
+                  {actualizandoEstado ? 'Guardando...' : 'Marcar En Proceso'}
+                </button>
+              )
+            ) : (
+              <button
+                onClick={() => {
+                  setEstadoObjetivo('finalizar');
+                  setShowFinalizarModal(true);
+                }}
+                disabled={actualizandoEstado}
+                className="px-4 py-2 rounded-lg bg-amber-500 text-slate-900 font-semibold hover:bg-amber-400 transition disabled:opacity-60"
+              >
+                {actualizandoEstado ? 'Guardando...' : 'Marcar Finalizada'}
+              </button>
+            )}
           </div>
         </div>
 
@@ -499,21 +499,25 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
             <span className="text-sm font-semibold">Progreso</span>
           </button>
 
+          {/* Historial/Borrar - Solo mostrar opción de borrar si tiene permisos */}
           <button
             onClick={() => setShowProgresoModal(true)}
             className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/10 border border-white/10 hover:border-amber-300/60 hover:bg-white/15 transition"
           >
             <HistorialIcon width={18} height={18} fill="#f5c565" />
-            <span className="text-sm font-semibold">Historial / Borrar</span>
+            <span className="text-sm font-semibold">{canDeleteProgreso() ? 'Historial / Borrar' : 'Historial'}</span>
           </button>
 
-          <button
-            onClick={() => setShowEliminarModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#7b1113] border border-white/10 hover:border-amber-300/60 hover:bg-[#9a1619] transition text-white"
-          >
-            <VolverIcon width={16} height={16} fill="#f5c565" />
-            <span className="text-sm font-semibold">Eliminar HR</span>
-          </button>
+          {/* Eliminar HR - Solo admin/desarrollador */}
+          {canDelete() && (
+            <button
+              onClick={() => setShowEliminarModal(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#7b1113] border border-white/10 hover:border-amber-300/60 hover:bg-[#9a1619] transition text-white"
+            >
+              <VolverIcon width={16} height={16} fill="#f5c565" />
+              <span className="text-sm font-semibold">Eliminar HR</span>
+            </button>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -646,12 +650,15 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
                       <p className="font-semibold text-white">{item.desde ? `${item.desde} → ${item.hacia}` : item.hacia}</p>
                       <p className="text-xs text-slate-200/80 mt-1">{item.observaciones || 'Sin observaciones'}</p>
                     </div>
-                    <button
-                      onClick={() => prepararBorradoProgreso(item.id)}
-                      className="text-xs px-3 py-1 rounded-full border border-red-400/60 text-red-200 hover:bg-red-500/10 transition"
-                    >
-                      Borrar
-                    </button>
+                    {/* Solo admin/desarrollador puede borrar progreso */}
+                    {canDeleteProgreso() && (
+                      <button
+                        onClick={() => prepararBorradoProgreso(item.id)}
+                        className="text-xs px-3 py-1 rounded-full border border-red-400/60 text-red-200 hover:bg-red-500/10 transition"
+                      >
+                        Borrar
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

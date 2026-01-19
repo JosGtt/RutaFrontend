@@ -175,12 +175,19 @@ const ModernDashboard: React.FC<Props> = ({ onNavigate }) => {
     );
   }
 
-  const activas = hojas.filter((h: any) => Number(h.dias_restantes ?? 9999) >= 0);
+  // Filtrar hojas activas (no finalizadas ni archivadas)
+  const hojasActivas = hojas.filter((h: any) => 
+    h.estado !== 'archivada' && 
+    h.estado !== 'finalizada' && 
+    h.estado_cumplimiento !== 'completado'
+  );
+  
+  const activas = hojasActivas.filter((h: any) => Number(h.dias_restantes ?? 9999) >= 0);
   const criticos = activas.filter((h: any) => Number(h.dias_restantes ?? 99) <= 2);
   const proximos = activas.filter((h: any) => Number(h.dias_restantes ?? 99) >= 3 && Number(h.dias_restantes ?? 99) <= 7);
   const futuros = activas.filter((h: any) => Number(h.dias_restantes ?? 99) > 7);
 
-  const prioridadCounts = hojas.reduce(
+  const prioridadCounts = hojasActivas.reduce(
     (acc, hoja) => {
       const prioridad = (hoja.prioridad || '').toLowerCase();
 

@@ -228,19 +228,19 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
 
   const aplicarEstado = async (destino: 'finalizada' | 'en_proceso') => {
     if (!hojaCompleta) return;
-    const estadoBackend = destino === 'finalizada' ? 'completado' : 'en_proceso';
+    // estado = columna principal (pendiente, en_proceso, enviada, finalizada, cancelada)
+    // estado_cumplimiento = columna de seguimiento (pendiente, en_proceso, completado, vencido)
+    const estadoColumna = destino; // 'finalizada' o 'en_proceso'
+    const estadoCumplimiento = destino === 'finalizada' ? 'completado' : 'en_proceso';
 
     try {
       setActualizandoEstado(true);
-      // El validador espera 'estado' con valores: pendiente, en_proceso, completado, vencido
       await axiosAuth.patch(`${API_ENDPOINTS.HOJAS_RUTA}/${hojaCompleta.id}/estado`, {
-        estado: estadoBackend,
-        estado_cumplimiento: estadoBackend
+        estado: estadoColumna,
+        estado_cumplimiento: estadoCumplimiento
       });
 
-      // Guardar estado visual como 'finalizada' o 'en_proceso' para la UI
-      const estadoVisual = destino === 'finalizada' ? 'finalizada' : 'en_proceso';
-      setHojaCompleta({ ...hojaCompleta, estado: estadoVisual, estado_cumplimiento: estadoBackend });
+      setHojaCompleta({ ...hojaCompleta, estado: estadoColumna, estado_cumplimiento: estadoCumplimiento });
       toast.success(`Estado actualizado a ${destino === 'finalizada' ? 'Finalizada' : 'En Proceso'}`);
     } catch (err: any) {
       const mensaje = err?.response?.data?.message || 'No se pudo actualizar el estado';
@@ -315,15 +315,14 @@ const HojaRutaDetalleViewNuevo: React.FC<HojaRutaDetalleViewProps> = ({ hoja, on
     if (!hojaCompleta) return;
     const ok = await verificarPasswordSesion(passwordFinalizar);
     if (!ok) return;
-    const estadoBackend = 'en_proceso';
     try {
       setActualizandoEstado(true);
-      // El validador espera 'estado' con valores: pendiente, en_proceso, completado, vencido
+      // estado='en_proceso' (columna principal), estado_cumplimiento='en_proceso'
       await axiosAuth.patch(`${API_ENDPOINTS.HOJAS_RUTA}/${hojaCompleta.id}/estado`, {
-        estado: estadoBackend,
-        estado_cumplimiento: estadoBackend
+        estado: 'en_proceso',
+        estado_cumplimiento: 'en_proceso'
       });
-      setHojaCompleta({ ...hojaCompleta, estado: 'en_proceso', estado_cumplimiento: estadoBackend });
+      setHojaCompleta({ ...hojaCompleta, estado: 'en_proceso', estado_cumplimiento: 'en_proceso' });
       toast.success('Estado cambiado a En Proceso');
       setShowFinalizarModal(false);
       setPasswordFinalizar('');
